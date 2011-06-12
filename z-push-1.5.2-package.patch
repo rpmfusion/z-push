@@ -1,0 +1,56 @@
+Patch by Robert Scheck <robert@fedoraproject.org> for z-push >= 1.5.2, that
+changes the original paths from Z-Push upstream to Fedora compliant ones.
+
+--- z-push/debug.php			2010-11-19 22:20:24.000000000 +0100
++++ z-push/debug.php.package		2011-04-27 00:03:07.000000000 +0200
+@@ -57,7 +57,7 @@
+ function debugLog($message) {
+     global $auth_user;
+     $user = (isset($auth_user))?"[". $auth_user ."] ":"";
+-    @$fp = fopen(BASE_PATH . "/debug.txt","a");
++    @$fp = fopen("/var/lib/z-push/debug.txt","a");
+     @$date = strftime("%x %X");
+     @fwrite($fp, "$date [". getmypid() ."] ". $user . "$message\n");
+     @fclose($fp);
+--- z-push/config.php			2011-03-18 20:22:53.000000000 +0100
++++ z-push/config.php.package		2011-04-27 00:04:11.000000000 +0200
+@@ -40,9 +40,9 @@
+ *
+ * Consult LICENSE file for details
+ ************************************************/
+-    // Defines the default time zone
++    // Defines the default time zone, change e.g. to "Europe/Amsterdam" when needed
+     if (function_exists("date_default_timezone_set")){
+-        date_default_timezone_set("Europe/Amsterdam");
++        date_default_timezone_set(date_default_timezone_get());
+     }
+ 
+     // Defines the base path on the server, terminated by a slash
+@@ -57,7 +57,7 @@
+                         "/usr/share/php5/" . PATH_SEPARATOR .
+                         "/usr/share/pear/");
+ 
+-    define('STATE_DIR', BASE_PATH.'/state');
++    define('STATE_DIR', '/var/lib/z-push/state');
+ 
+     // Try to set unlimited timeout
+     define('SCRIPT_TIMEOUT', 0);
+@@ -91,16 +91,8 @@
+     //   SYNC_FILTERTYPE_1MONTH, SYNC_FILTERTYPE_3MONTHS, SYNC_FILTERTYPE_6MONTHS
+     define('SYNC_FILTERTIME_MAX', SYNC_FILTERTYPE_ALL);
+ 
+-    // The data providers that we are using (see configuration below)
+-    $BACKEND_PROVIDER = "BackendICS";
+-
+-    // ************************
+-    //  BackendICS settings
+-    // ************************
+-
+-    // Defines the server to which we want to connect
+-    define('MAPI_SERVER', 'file:///var/run/zarafa');
+-
++    // The data provider that we are using
++    $BACKEND_PROVIDER = "BackendIMAP";
+ 
+     // ************************
+     //  BackendIMAP settings
