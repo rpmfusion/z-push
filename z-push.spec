@@ -1,9 +1,9 @@
-%global svnrevision 685
+%global svnrevision 707
 %global with_ldap   1
 
 Summary:        ActiveSync over-the-air implementation for mobile syncing
 Name:           z-push
-Version:        1.5.3
+Version:        1.5.4
 Release:        1%{?dist}
 License:        AGPLv3 with exceptions
 Group:          Applications/Productivity
@@ -16,7 +16,6 @@ Source4:        z-push.conf
 Source5:        zarafa-z-push.conf
 Patch0:         z-push-1.5.2-package.patch
 Patch1:         z-push-1.5.2-zarafa.patch
-Patch2:         z-push-1.5.3-license.patch
 Requires:       httpd, php >= 4.3.0, php-imap >= 4.3.0
 %if %{with_ldap}
 Requires:       php-ldap >= 4.3.0
@@ -67,7 +66,6 @@ cp -af ../%{name}-%{version}-%{svnrevision}/* .
 cp -pf %{SOURCE3} README.FEDORA
 %patch1 -p1 -b .zarafa
 touch -c -r config.php{.zarafa,}
-%patch2 -p1
 popd
 
 # Z-Push without Zarafa
@@ -75,7 +73,6 @@ pushd %{name}-%{version}-%{svnrevision}
 cp -pf %{SOURCE2} README.FEDORA
 %patch0 -p1 -b .package
 touch -c -r config.php{.package,}
-%patch2 -p1
 popd
 
 %build
@@ -181,6 +178,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(-,apache,apache) %dir %{_localstatedir}/lib/zarafa-%{name}/state/
 
 %changelog
+* Mon Jul 18 2011 Robert Scheck <robert@fedoraproject.org> 1.5.4-1
+- Upgrade to 1.5.4
+
 * Tue Jun 07 2011 Robert Scheck <robert@fedoraproject.org> 1.5.3-1
 - Upgrade to 1.5.3
 
