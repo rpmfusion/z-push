@@ -1,9 +1,9 @@
-%global svnrevision 707
+%global svnrevision 790
 %global with_ldap   1
 
 Summary:        ActiveSync over-the-air implementation for mobile syncing
 Name:           z-push
-Version:        1.5.4
+Version:        1.5.5
 Release:        1%{?dist}
 License:        AGPLv3 with exceptions
 Group:          Applications/Productivity
@@ -14,8 +14,8 @@ Source2:        z-push-README.FEDORA.package
 Source3:        z-push-README.FEDORA.zarafa
 Source4:        z-push.conf
 Source5:        zarafa-z-push.conf
-Patch0:         z-push-1.5.2-package.patch
-Patch1:         z-push-1.5.2-zarafa.patch
+Patch0:         z-push-1.5.5-package.patch
+Patch1:         z-push-1.5.5-zarafa.patch
 Requires:       httpd, php >= 4.3.0, php-imap >= 4.3.0
 %if %{with_ldap}
 Requires:       php-ldap >= 4.3.0
@@ -142,7 +142,7 @@ popd
 
 # Remove all unwanted files and directories
 rm -rf $RPM_BUILD_ROOT%{_datadir}/{%{name},zarafa-%{name}}/{state,backend/{kolab,zarafa}}/
-rm -f $RPM_BUILD_ROOT%{_datadir}/{%{name},zarafa-%{name}}/{INSTALL,LICENSE,{config,debug}.php.{package,zarafa},README.FEDORA}
+rm -f $RPM_BUILD_ROOT%{_datadir}/{%{name},zarafa-%{name}}/{INSTALL,LICENSE,{config,debug,index}.php.{package,zarafa},README.FEDORA}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -178,6 +178,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(-,apache,apache) %dir %{_localstatedir}/lib/zarafa-%{name}/state/
 
 %changelog
+* Sun Sep 18 2011 Robert Scheck <robert@fedoraproject.org> 1.5.5-1
+- Upgrade to 1.5.5
+
 * Mon Jul 18 2011 Robert Scheck <robert@fedoraproject.org> 1.5.4-1
 - Upgrade to 1.5.4
 
