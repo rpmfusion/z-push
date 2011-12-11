@@ -1,8 +1,8 @@
-Patch by Robert Scheck <robert@fedoraproject.org> for z-push >= 1.5.5, that
+Patch by Robert Scheck <robert@fedoraproject.org> for z-push >= 1.5.6, that
 changes the original paths from Z-Push upstream to Fedora compliant ones.
 
---- z-push-1.5.5/debug.php		2010-11-19 22:20:24.000000000 +0100
-+++ z-push-1.5.5/debug.php.zarafa	2011-09-18 03:13:32.000000000 +0200
+--- z-push-1.5.6/debug.php		2010-11-19 22:20:24.000000000 +0100
++++ z-push-1.5.6/debug.php.zarafa	2011-12-11 23:27:55.000000000 +0100
 @@ -57,7 +57,7 @@
  function debugLog($message) {
      global $auth_user;
@@ -12,8 +12,8 @@ changes the original paths from Z-Push upstream to Fedora compliant ones.
      @$date = strftime("%x %X");
      @fwrite($fp, "$date [". getmypid() ."] ". $user . "$message\n");
      @fclose($fp);
---- z-push-1.5.5/config.php		2011-03-18 20:22:53.000000000 +0100
-+++ z-push-1.5.5/config.php.zarafa	2011-09-18 03:17:00.000000000 +0200
+--- z-push-1.5.6/config.php		2011-11-24 22:39:15.000000000 +0100
++++ z-push-1.5.6/config.php.zarafa	2011-12-11 23:29:14.000000000 +0100
 @@ -40,10 +40,8 @@
  *
  * Consult LICENSE file for details
@@ -36,16 +36,16 @@ changes the original paths from Z-Push upstream to Fedora compliant ones.
  
      // Try to set unlimited timeout
      define('SCRIPT_TIMEOUT', 0);
-@@ -91,7 +89,7 @@
-     //   SYNC_FILTERTYPE_1MONTH, SYNC_FILTERTYPE_3MONTHS, SYNC_FILTERTYPE_6MONTHS
-     define('SYNC_FILTERTIME_MAX', SYNC_FILTERTYPE_ALL);
+@@ -96,7 +94,7 @@
+     // a higher value if you have a high load on the server.
+     define('PING_INTERVAL', 10);
  
 -    // The data providers that we are using (see configuration below)
 +    // The data provider that we are using
      $BACKEND_PROVIDER = "BackendICS";
  
      // ************************
-@@ -102,41 +100,6 @@
+@@ -107,41 +105,6 @@
      define('MAPI_SERVER', 'file:///var/run/zarafa');
  
  
@@ -87,8 +87,8 @@ changes the original paths from Z-Push upstream to Fedora compliant ones.
      // Alternative backend to perform SEARCH requests (GAL search)
      // if an empty value is used, the default search functionality of the main backend is used
      // use 'SearchLDAP' to search in a LDAP directory (see backend/searchldap/config.php)
---- z-push-1.5.5/index.php		2011-08-04 19:32:40.000000000 +0200
-+++ z-push-1.5.5/index.php.zarafa	2011-09-18 03:15:15.000000000 +0200
+--- z-push-1.5.6/index.php		2011-08-04 19:32:40.000000000 +0200
++++ z-push-1.5.6/index.php.zarafa	2011-12-11 23:29:43.000000000 +0100
 @@ -53,6 +53,15 @@
  include_once("compat.php");
  include_once("version.php");
