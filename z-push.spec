@@ -14,8 +14,8 @@ Source2:        z-push-README.FEDORA.package
 Source3:        z-push-README.FEDORA.zarafa
 Source4:        z-push.conf
 Source5:        zarafa-z-push.conf
-Patch0:         z-push-1.5.6-package.patch
-Patch1:         z-push-1.5.6-zarafa.patch
+Patch0:         z-push-1.5.7-package.patch
+Patch1:         z-push-1.5.7-zarafa.patch
 Requires:       httpd, php >= 4.3.0, php-imap >= 4.3.0
 %if %{with_ldap}
 Requires:       php-ldap >= 4.3.0
