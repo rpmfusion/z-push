@@ -1,9 +1,9 @@
-%global svnrevision 1187
+%global svnrevision 1262
 %global with_ldap   1
 
 Summary:        ActiveSync over-the-air implementation for mobile syncing
 Name:           z-push
-Version:        1.5.8
+Version:        1.5.10
 Release:        1%{?dist}
 License:        AGPLv3 with exceptions
 Group:          Applications/Productivity
@@ -178,6 +178,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(-,apache,apache) %dir %{_localstatedir}/lib/zarafa-%{name}/state/
 
 %changelog
+* Tue Jun 05 2012 Robert Scheck <robert@fedoraproject.org> 1.5.10-1
+- Upgrade to 1.5.10
+
 * Mon Apr 09 2012 Robert Scheck <robert@fedoraproject.org> 1.5.8-1
 - Upgrade to 1.5.8
 
