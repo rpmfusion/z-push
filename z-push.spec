@@ -1,24 +1,25 @@
-%global svnrevision 1262
-%global with_ldap   1
+%global svnrevision 1541
 
 Summary:        ActiveSync over-the-air implementation for mobile syncing
 Name:           z-push
-Version:        1.5.10
+Version:        2.0.5
 Release:        1%{?dist}
 License:        AGPLv3 with exceptions
 Group:          Applications/Productivity
 URL:            http://z-push.sourceforge.net/
-Source0:        http://download.berlios.de/%{name}/%{name}-%{version}-%{svnrevision}.tar.gz
+Source0:        http://www.zarafa-deutschland.de/z-push-download/final/2.0/%{name}-%{version}-%{svnrevision}.tar.gz
 Source1:        z-push-permission.pdf
-Source2:        z-push-README.FEDORA.package
-Source3:        z-push-README.FEDORA.zarafa
-Source4:        z-push.conf
-Source5:        zarafa-z-push.conf
-Patch0:         z-push-1.5.7-package.patch
-Patch1:         z-push-1.5.7-zarafa.patch
-Requires:       httpd, php >= 4.3.0, php-imap >= 4.3.0
-%if %{with_ldap}
-Requires:       php-ldap >= 4.3.0
+Source2:        z-push-README.FEDORA
+Source3:        z-push.conf
+Source4:        z-push.logrotate
+Patch0:         z-push-2.0.5-package.patch
+Requires:       httpd, php-iconv, php-sysvsem, php-sysvshm
+Requires:       coreutils, bash, grep, less, php-pcntl
+# Bug: php53 from RHEL 5 does not provide php (#717158)
+%if 0%{?rhel} == 5
+Requires:       mod_php >= 5.1
+%else
+Requires:       php >= 5.1
 %endif
 BuildArch:      noarch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
@@ -29,51 +30,79 @@ Z-Push is an implementation of the ActiveSync protocol which is used
 Mobile, Android, iPhone, Sony Ericsson and Nokia mobile devices. With
 Z-Push any groupware can be connected and synced with these devices.
 
-For use cases of Z-Push with the Zarafa Collaboration Platform and Open
-Source Collaboration, please use the prepared package zarafa-z-push.
-
-%package -n zarafa-%{name}
-Summary:        ActiveSync over-the-air implementation for Zarafa
+%package combined
+Summary:        Combines several data backend providers for Z-Push
 Group:          Applications/Productivity
-Requires:       httpd, php >= 4.3.0, php-mapi >= 6.40.0
-%if %{with_ldap}
-Requires:       php-ldap >= 4.3.0
-%endif
+Requires:       %{name} = %{version}-%{release}
 
-%description -n zarafa-%{name}
-Z-Push is an implementation of the ActiveSync protocol which is used
-'over-the-air' for multi platform ActiveSync devices, including Windows
-Mobile, Android, iPhone, Sony Ericsson and Nokia mobile devices. With
-Z-Push any groupware can be connected and synced with these devices.
+%description combined
+The z-push-combined package contains a special data backend provider
+for Z-Push to combine several data backend providers. This allows to
+handle each type of item (e-mails, contacts, calendar entries, tasks)
+by a different backend. A combination could be to handle e-mails via
+the IMAP data backend provider, while all other items are handled by
+the Zarafa data backend provider. If you want to use this, you will
+need to install this package and additionally the other Z-Push data
+backend providers that shall be combined.
 
-This package is prepared for use with the Zarafa Collaboration Platform
-and Open Source Collaboration. For non-Zarafa use cases, please use the
-regular Z-Push package.
+%package imap
+Summary:        IMAP data backend provider for Z-Push
+Group:          Applications/Productivity
+Requires:       %{name} = %{version}-%{release}, php-imap >= 5.1.0
+
+%description imap
+The z-push-imap package contains the IMAP data backend provider for
+Z-Push. If you want Z-Push to access an IMAP server, you will need to
+install this package.
+
+%package maildir
+Summary:        Maildir data backend provider for Z-Push
+Group:          Applications/Productivity
+Requires:       %{name} = %{version}-%{release}
+
+%description maildir
+The z-push-maildir package contains the Maildir data backend provider
+for Z-Push. If you want Z-Push to access a Maildir, you will need to
+install this package.
+
+%package searchldap
+Summary:        LDAP search backend provider for Z-Push
+Group:          Applications/Productivity
+Requires:       %{name} = %{version}-%{release}, php-ldap >= 5.1.0
+
+%description searchldap
+The z-push-searchldap contains the LDAP search backend provider for
+Z-Push. If you want to perform search requests (Global Address Book
+search) in an LDAP directory rather the default search functionality
+provided by the data backend, you will need to install this package.
+
+%package vcarddir
+Summary:        vCard directory data backend provider for Z-Push
+Group:          Applications/Productivity
+Requires:       %{name} = %{version}-%{release}
+
+%description vcarddir
+The z-push-vcarddir package contains the vCard directory backend data
+provider for Z-Push. If you want Z-Push to access a vCard directory,
+you will need to install this package.
+
+%package zarafa
+Summary:        Zarafa data backend provider for Z-Push
+Group:          Applications/Productivity
+Requires:       %{name} = %{version}-%{release}, php-mapi >= 6.40.0
+Provides:       zarafa-%{name} = %{version}-%{release}
+Obsoletes:      zarafa-%{name} < %{version}-%{release}
+
+%description zarafa
+The z-push-zarafa package contains the Zarafa Collaboration Plattform
+data backend provider for Z-Push. If you want Z-Push to access a MAPI-
+based service or the Zarafa Collaboration Plattform, you will need to
+install this package.
 
 %prep
-%setup -q -T -c -a 0
-
-# Copy permission for later usage
-cp -pf %{SOURCE1} permission.pdf
-
-# Correct wrong file permissions
-chmod 644 %{name}-%{version}-%{svnrevision}/{include/z_RFC822,streamer}.php
-
-# Z-Push for Zarafa
-mkdir zarafa-%{name}-%{version}-%{svnrevision}
-pushd zarafa-%{name}-%{version}-%{svnrevision}
-cp -af ../%{name}-%{version}-%{svnrevision}/* .
-cp -pf %{SOURCE3} README.FEDORA
-%patch1 -p1 -b .zarafa
-touch -c -r config.php{.zarafa,}
-popd
-
-# Z-Push without Zarafa
-pushd %{name}-%{version}-%{svnrevision}
-cp -pf %{SOURCE2} README.FEDORA
+%setup -q -n %{name}-%{version}-%{svnrevision}
 %patch0 -p1 -b .package
-touch -c -r config.php{.package,}
-popd
+touch -c -r config.php{.package,} config.*.php backend/zarafa/config.php
 
 %build
 
@@ -81,103 +110,112 @@ popd
 rm -rf $RPM_BUILD_ROOT
 
 # Create all needed directories
-mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/{{,zarafa}/%{name},httpd/conf.d}/
-mkdir -p $RPM_BUILD_ROOT{%{_bindir},%{_datadir}/{%{name},zarafa-%{name}}}/
-mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/lib/{%{name},zarafa-%{name}}/state/
-
-# Z-Push without Zarafa
-pushd %{name}-%{version}-%{svnrevision}
+mkdir -p $RPM_BUILD_ROOT{{%{_sysconfdir},%{_datadir},%{_localstatedir}/{lib,log}}/%{name},%{_sbindir}}
 
 # Install all files into destination
 cp -af * $RPM_BUILD_ROOT%{_datadir}/%{name}/
 
-# Move configuration file to its place
+# Move configuration files to its places
 mv -f $RPM_BUILD_ROOT%{_datadir}/%{name}/config.php $RPM_BUILD_ROOT%{_sysconfdir}/%{name}/config.php
 ln -sf ../../..%{_sysconfdir}/%{name}/config.php $RPM_BUILD_ROOT%{_datadir}/%{name}/config.php
 
-# Install the apache configuration file
-install -p -m 644 %{SOURCE4} $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d/%{name}.conf
+for backend in imap maildir vcarddir; do
+  mkdir -p $RPM_BUILD_ROOT%{_datadir}/%{name}/backend/${backend}/
+  mv -f $RPM_BUILD_ROOT%{_datadir}/%{name}/backend/${backend}.php $RPM_BUILD_ROOT%{_datadir}/%{name}/backend/${backend}/
+  mv -f $RPM_BUILD_ROOT%{_datadir}/%{name}/config.${backend}.php $RPM_BUILD_ROOT%{_sysconfdir}/%{name}/${backend}.php
+  ln -sf ../../../../..%{_sysconfdir}/%{name}/${backend}.php $RPM_BUILD_ROOT%{_datadir}/%{name}/backend/${backend}/config.php
+done
 
-# Remove all Zarafa requiring files
-rm -f $RPM_BUILD_ROOT%{_datadir}/%{name}/{backend/ics,include/z_{ical,tnef}}.php
+for backend in combined searchldap zarafa; do
+  mv -f $RPM_BUILD_ROOT%{_datadir}/%{name}/backend/${backend}/config.php $RPM_BUILD_ROOT%{_sysconfdir}/%{name}/${backend}.php
+  ln -sf ../../../../..%{_sysconfdir}/%{name}/${backend}.php $RPM_BUILD_ROOT%{_datadir}/%{name}/backend/${backend}/config.php
+done
 
-# Move searchldap configuration to its place
-%if %{with_ldap}
-mv -f $RPM_BUILD_ROOT%{_datadir}/%{name}/backend/searchldap/config.php $RPM_BUILD_ROOT%{_sysconfdir}/%{name}/searchldap.php
-ln -sf ../../../../..%{_sysconfdir}/%{name}/searchldap.php $RPM_BUILD_ROOT%{_datadir}/%{name}/backend/searchldap/config.php
-%else
-rm -rf $RPM_BUILD_ROOT%{_datadir}/%{name}/backend/{searchbackend.php,searchldap/}
-%endif
-
-popd
-
-# Z-Push for Zarafa
-pushd zarafa-%{name}-%{version}-%{svnrevision}
-
-# Install all files into destination
-cp -af * $RPM_BUILD_ROOT%{_datadir}/zarafa-%{name}/
-
-# Move configuration file to its place
-mv -f $RPM_BUILD_ROOT%{_datadir}/zarafa-%{name}/config.php $RPM_BUILD_ROOT%{_sysconfdir}/zarafa/%{name}/config.php
-ln -sf ../../..%{_sysconfdir}/zarafa/%{name}/config.php $RPM_BUILD_ROOT%{_datadir}/zarafa-%{name}/config.php
+# Install the command line utilities
+mv -f $RPM_BUILD_ROOT%{_datadir}/%{name}/%{name}-admin.php $RPM_BUILD_ROOT%{_sbindir}/%{name}-admin
+mv -f $RPM_BUILD_ROOT%{_datadir}/%{name}/%{name}-top.php $RPM_BUILD_ROOT%{_sbindir}/%{name}-top
 
 # Install the apache configuration file
-install -p -m 644 %{SOURCE5} $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d/zarafa-%{name}.conf
+install -D -p -m 644 %{SOURCE3} $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d/%{name}.conf
 
-# Remove all non-Zarafa related files
-rm -f $RPM_BUILD_ROOT%{_datadir}/zarafa-%{name}/backend/{diffbackend,imap,maildir,vcarddir}.php
-
-# Move searchldap configuration to its place
-%if %{with_ldap}
-mv -f $RPM_BUILD_ROOT%{_datadir}/zarafa-%{name}/backend/searchldap/config.php $RPM_BUILD_ROOT%{_sysconfdir}/zarafa/%{name}/searchldap.php
-ln -sf ../../../../..%{_sysconfdir}/zarafa/%{name}/searchldap.php $RPM_BUILD_ROOT%{_datadir}/zarafa-%{name}/backend/searchldap/config.php
-%else
-rm -rf $RPM_BUILD_ROOT%{_datadir}/zarafa-%{name}/backend/{searchbackend.php,searchldap/}
-%endif
-
-# Install Zarafa-related command line tool
-install -p -m 755 backend/zarafa/z-push-admin.php $RPM_BUILD_ROOT%{_bindir}/z-push-admin
-
-popd
+# Install the logrotate configuration file
+install -D -p -m 644 %{SOURCE4} $RPM_BUILD_ROOT%{_sysconfdir}/logrotate.d/%{name}
 
 # Remove all unwanted files and directories
-rm -rf $RPM_BUILD_ROOT%{_datadir}/{%{name},zarafa-%{name}}/{state,backend/{kolab,zarafa}}/
-rm -f $RPM_BUILD_ROOT%{_datadir}/{%{name},zarafa-%{name}}/{INSTALL,LICENSE,{config,debug,index}.php.{package,zarafa},README.FEDORA}
+rm -rf $RPM_BUILD_ROOT%{_datadir}/%{name}/{INSTALL,LICENSE,backend/kolab,{.,*,*/*}/*.package}
+
+# Copy permission and README for later usage
+cp -pf %{SOURCE1} permission.pdf
+cp -pf %{SOURCE2} README.FEDORA
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc %{name}-%{version}-%{svnrevision}/LICENSE permission.pdf
-%doc %{name}-%{version}-%{svnrevision}/README.FEDORA
+%doc LICENSE README.FEDORA permission.pdf
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}.conf
+%config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %dir %{_sysconfdir}/%{name}/
 %config(noreplace) %{_sysconfdir}/%{name}/config.php
-%if %{with_ldap}
-%config(noreplace) %{_sysconfdir}/%{name}/searchldap.php
-%endif
+%{_sbindir}/z-push-admin
+%{_sbindir}/z-push-top
 %{_datadir}/%{name}/
-%dir %{_localstatedir}/lib/%{name}/
-%attr(-,apache,apache) %dir %{_localstatedir}/lib/%{name}/state/
+%exclude %{_datadir}/%{name}/backend/combined/
+%exclude %{_datadir}/%{name}/backend/imap/
+%exclude %{_datadir}/%{name}/backend/maildir/
+%exclude %{_datadir}/%{name}/backend/searchldap/
+%exclude %{_datadir}/%{name}/backend/vcarddir/
+%exclude %{_datadir}/%{name}/backend/zarafa/
+%attr(-,apache,apache) %dir %{_localstatedir}/lib/%{name}/
+%attr(-,apache,apache) %dir %{_localstatedir}/log/%{name}/
 
-%files -n zarafa-%{name}
+%files combined
 %defattr(-,root,root,-)
-%doc zarafa-%{name}-%{version}-%{svnrevision}/LICENSE permission.pdf
-%doc zarafa-%{name}-%{version}-%{svnrevision}/README.FEDORA
-%config(noreplace) %{_sysconfdir}/httpd/conf.d/zarafa-%{name}.conf
-%dir %{_sysconfdir}/zarafa/
-%dir %{_sysconfdir}/zarafa/%{name}/
-%config(noreplace) %{_sysconfdir}/zarafa/%{name}/config.php
-%if %{with_ldap}
-%config(noreplace) %{_sysconfdir}/zarafa/%{name}/searchldap.php
-%endif
-%{_bindir}/z-push-admin
-%{_datadir}/zarafa-%{name}/
-%dir %{_localstatedir}/lib/zarafa-%{name}/
-%attr(-,apache,apache) %dir %{_localstatedir}/lib/zarafa-%{name}/state/
+%config(noreplace) %{_sysconfdir}/%{name}/combined.php
+%{_datadir}/%{name}/backend/combined/
+
+%files imap
+%defattr(-,root,root,-)
+%config(noreplace) %{_sysconfdir}/%{name}/imap.php
+%{_datadir}/%{name}/backend/imap/
+
+%files maildir
+%defattr(-,root,root,-)
+%config(noreplace) %{_sysconfdir}/%{name}/maildir.php
+%{_datadir}/%{name}/backend/maildir/
+
+%files searchldap
+%defattr(-,root,root,-)
+%config(noreplace) %{_sysconfdir}/%{name}/searchldap.php
+%{_datadir}/%{name}/backend/searchldap/
+
+%files vcarddir
+%defattr(-,root,root,-)
+%config(noreplace) %{_sysconfdir}/%{name}/vcarddir.php
+%{_datadir}/%{name}/backend/vcarddir/
+
+%files zarafa
+%defattr(-,root,root,-)
+%config(noreplace) %{_sysconfdir}/%{name}/zarafa.php
+%{_datadir}/%{name}/backend/zarafa/
 
 %changelog
+* Thu Nov 08 2012 Robert Scheck <robert@fedoraproject.org> 2.0.5-1
+- Upgrade to 2.0.5
+
+* Sun Nov 04 2012 Robert Scheck <robert@fedoraproject.org> 2.0.4-1
+- Upgrade to 2.0.4
+
+* Wed Oct 31 2012 Robert Scheck <robert@fedoraproject.org> 1.5.13-1
+- Upgrade to 1.5.13
+
+* Sun Aug 26 2012 Robert Scheck <robert@fedoraproject.org> 1.5.12-1
+- Upgrade to 1.5.12
+
+* Sat Jun 30 2012 Robert Scheck <robert@fedoraproject.org> 1.5.11-1
+- Upgrade to 1.5.11
+
 * Tue Jun 05 2012 Robert Scheck <robert@fedoraproject.org> 1.5.10-1
 - Upgrade to 1.5.10
 

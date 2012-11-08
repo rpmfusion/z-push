@@ -1,0 +1,89 @@
+Using Z-Push
+============
+
+
+Configuration
+-------------
+
+Edit the Z-Push configuration file /etc/z-push/config.php to fit your
+needs. If you intend to use Z-Push with an IMAP server (like Dovecot or
+Cyrus IMAPd for example), you should run "yum install z-push-imap". In
+case you intend to use Z-Push with Zarafa, you should execute instead
+the "yum install z-push-zarafa" command. Do not forget to configure the
+timezone in /etc/php.ini or in the Z-Push configuration file. Restart
+afterwards the Apache Web Server by using "service httpd restart".
+
+After doing this, you should be already able to synchronize with your
+mobile device.
+
+
+Technical information
+---------------------
+
+Z-Push parameters and their roles for a more individual configuration
+are also explained in the /etc/z-push/config.php file.
+
+By default the state directory is /var/lib/z-push, the log directory is
+/var/log/z-push. The Apache configuration /etc/httpd/conf.d/z-push.conf
+contains an alias from "/Microsoft-Server-ActiveSync" to Z-Push itself,
+as well as some PHP settings.
+
+
+Setting up your mobile device
+-----------------------------
+
+This is simply a case of adding an 'exchange server' to your ActiveSync
+server list, specifying the IP address of the Z-Push's Apache server,
+disabling SSL, unless you have already setup SSL on your Apache server,
+setting the correct username and password (the domain is ignored, you can
+simply specify 'domain' or some other random string), and then going through
+the standard activesync settings.
+
+Once you have done this, you should be able to synchronise your mobile
+simply by clicking the 'Sync' button in ActiveSync on your mobile.
+
+*NOTE* using the synchronisation without SSL is not recommended because
+your private data is transmitted in clear text over the net. Configuring
+SSL on Apache is beyond of the scope of this document. Please refer to
+Apache documention available at http://httpd.apache.org/docs/
+
+
+Troubleshooting
+---------------
+
+Most problems will be caused by incorrect Apache settings. To test whether
+your Apache setup is working correctly, you can simply type the Z-Push URL
+in your browser, to see if apache is correctly redirecting your request to
+z-push. You can simply use:
+
+    http://<serverip>/Microsoft-Server-ActiveSync
+
+If correctly configured, you should see a username/password request and
+when you specify a valid username and password, you should see a Z-Push
+information page, saying that this kind of requests is not supported.
+Without authentication credentials Z-Push displays general information.
+
+If not then check your PHP and Apache settings and Apache error logs.
+
+If you have other synchronisation problems, you can increase the LOGLEVEL
+parameter in the config e.g. to LOGLEVEL_DEBUG or LOGLEVEL_WBXML.
+
+The z-push.log file will then collect detailed debug information from your
+synchronisation.
+
+*NOTE* This setting will set Z-Push to log the detailed information for
+*every* user on the system. You can set a different log level for particular
+users by adding them comma separated to $specialLogUsers in the config.php
+ e.g. $specialLogUsers = array("user1", "user2", "user3");
+ 
+ *NOTE* Be aware that if you are using LOGLEVEL_DEBUG and LOGLEVEL_WBXML
+ Z-Push will be quite talkative, so it is advisable to use log-rotate
+ on the log file.
+
+
+Documentation
+-------------
+
+Further information can be found in the Zarafa Z-Push configuration manual
+http://doc.zarafa.com/trunk/Administrator_Manual/en-US/html/_zpush.html and
+at the homepage of Z-Push, http://z-push.sourceforge.net.

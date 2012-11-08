@@ -1,0 +1,453 @@
+Patch by Robert Scheck <robert@fedoraproject.org> for z-push >= 2.0.5, which changes the
+original paths from Z-Push upstream to Fedora compliant ones. Additionally, it splits up
+the large configuration file for the multiple data backend providers to allow a much more
+flexible RPM packaging.
+
+--- z-push-2.0.5-1541/config.php			2012-10-17 22:57:36.000000000 +0200
++++ z-push-2.0.5-1541/config.php.package		2012-11-08 21:34:01.000000000 +0100
+@@ -157,52 +157,25 @@
+     // default: 100 - value used if mobile does not limit amount of items
+     define('SYNC_MAX_ITEMS', 100);
+ 
++
+ /**********************************************************************************
+  *  Backend settings
++ *
++ *  Z-Push supports currently the data backend providers IMAP, Maildir, vCard directory,
++ *  Zarafa and a mixture by the combined one. Ensure that the used backend is installed
++ *  and proper configured as well:
++ *    BackendIMAP     - configure /etc/z-push/imap.php (provided by z-push-imap)
++ *    BackendMaildir  - configure /etc/z-push/maildir.php (provided by z-push-maildir)
++ *    BackendVCardDir - configure /etc/z-push/vcarddir.php (provided by z-push-vcarddir)
++ *    BackendZarafa   - configure /etc/z-push/zarafa.php (provided by z-push-zarafa)
++ *    BackendCombined - configure /etc/z-push/combined.php (provided by z-push-combined)
++ *                      and of course the wanted (at least two) other backend providers
++ *  If only one data backend provider has been installed, that one is used by default.
++ *  In case of multiple installed data backend providers, Zarafa is preferred over IMAP
++ *  over Maildir over vCard directory. The combined backend is never choosen by default.
+  */
+-    // The data providers that we are using (see configuration below)
+-    define('BACKEND_PROVIDER', "BackendZarafa");
+-
+-
+-    // ************************
+-    //  BackendZarafa settings
+-    // ************************
+-    // Defines the server to which we want to connect
+-    define('MAPI_SERVER', 'file:///var/run/zarafa');
+-
+-
+-    // ************************
+-    //  BackendIMAP settings
+-    // ************************
+-    // Defines the server to which we want to connect
+-    define('IMAP_SERVER', 'localhost');
+-    // connecting to default port (143)
+-    define('IMAP_PORT', 143);
+-    // best cross-platform compatibility (see http://php.net/imap_open for options)
+-    define('IMAP_OPTIONS', '/notls/norsh');
+-    // overwrite the "from" header if it isn't set when sending emails
+-    // options: 'username'    - the username will be set (usefull if your login is equal to your emailaddress)
+-    //        'domain'    - the value of the "domain" field is used
+-    //        '@mydomain.com' - the username is used and the given string will be appended
+-    define('IMAP_DEFAULTFROM', '');
+-    // copy outgoing mail to this folder. If not set z-push will try the default folders
+-    define('IMAP_SENTFOLDER', '');
+-    // forward messages inline (default false - as attachment)
+-    define('IMAP_INLINE_FORWARD', false);
+-    // use imap_mail() to send emails (default) - if false mail() is used
+-    define('IMAP_USE_IMAPMAIL', true);
+-
+-
+-    // ************************
+-    //  BackendMaildir settings
+-    // ************************
+-    define('MAILDIR_BASE', '/tmp');
+-    define('MAILDIR_SUBDIR', 'Maildir');
+-
+-    // **********************
+-    //  BackendVCardDir settings
+-    // **********************
+-    define('VCARDDIR_DIR', '/home/%u/.kde/share/apps/kabc/stdvcf');
++    // The data provider that we are using
++    define('BACKEND_PROVIDER', '');
+ 
+ 
+ /**********************************************************************************
+@@ -211,7 +184,7 @@
+  *  Alternative backend to perform SEARCH requests (GAL search)
+  *  By default the main Backend defines the preferred search functionality.
+  *  If set, the Search Provider will always be preferred.
+- *  Use 'BackendSearchLDAP' to search in a LDAP directory (see backend/searchldap/config.php)
++ *  Use 'BackendSearchLDAP' to search in a LDAP directory (see /etc/zarafa/searchldap.php)
+  */
+     define('SEARCH_PROVIDER', '');
+     // Time in seconds for the server search. Setting it too high might result in timeout.
+--- z-push-2.0.5-1541/config.imap.php			1970-01-01 01:00:00.000000000 +0100
++++ z-push-2.0.5-1541/config.imap.php.package		2012-11-04 16:45:03.000000000 +0100
+@@ -0,0 +1,73 @@
++<?php
++/***********************************************
++* File      :   /etc/z-push/imap.php
++* Project   :   Z-Push
++* Descr     :   configuration file for the
++*               IMAP backend.
++*
++* Created   :   01.10.2007
++*
++* Copyright 2007 - 2012 Zarafa Deutschland GmbH
++*
++* This program is free software: you can redistribute it and/or modify
++* it under the terms of the GNU Affero General Public License, version 3,
++* as published by the Free Software Foundation with the following additional
++* term according to sec. 7:
++*
++* According to sec. 7 of the GNU Affero General Public License, version 3,
++* the terms of the AGPL are supplemented with the following terms:
++*
++* "Zarafa" is a registered trademark of Zarafa B.V.
++* "Z-Push" is a registered trademark of Zarafa Deutschland GmbH
++* The licensing of the Program under the AGPL does not imply a trademark license.
++* Therefore any rights, title and interest in our trademarks remain entirely with us.
++*
++* However, if you propagate an unmodified version of the Program you are
++* allowed to use the term "Z-Push" to indicate that you distribute the Program.
++* Furthermore you may use our trademarks where it is necessary to indicate
++* the intended purpose of a product or service provided you use it in accordance
++* with honest practices in industrial or commercial matters.
++* If you want to propagate modified versions of the Program under the name "Z-Push",
++* you may only do so if you have a written permission by Zarafa Deutschland GmbH
++* (to acquire a permission please contact Zarafa at trademark@zarafa.com).
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++* GNU Affero General Public License for more details.
++*
++* You should have received a copy of the GNU Affero General Public License
++* along with this program.  If not, see <http://www.gnu.org/licenses/>.
++*
++* Consult LICENSE file for details
++************************************************/
++
++// Please do not forget to configure "BACKEND_PROVIDER" in /etc/z-push/config.php to
++// either "BackendIMAP" or "BackendCombined", if more than one data backend provider
++// has been installed!
++
++// Defines the server to which we want to connect
++define('IMAP_SERVER', 'localhost');
++
++// connecting to default port (143)
++define('IMAP_PORT', 143);
++
++// best cross-platform compatibility (see http://php.net/imap_open for options)
++define('IMAP_OPTIONS', '/notls/norsh');
++
++// overwrite the "from" header if it isn't set when sending emails
++// options: 'username'    - the username will be set (usefull if your login is equal to your emailaddress)
++//        'domain'    - the value of the "domain" field is used
++//        '@mydomain.com' - the username is used and the given string will be appended
++define('IMAP_DEFAULTFROM', '');
++
++// copy outgoing mail to this folder. If not set z-push will try the default folders
++define('IMAP_SENTFOLDER', '');
++
++// forward messages inline (default false - as attachment)
++define('IMAP_INLINE_FORWARD', false);
++
++// use imap_mail() to send emails (default) - if false mail() is used
++define('IMAP_USE_IMAPMAIL', true);
++
++?>
+--- z-push-2.0.5-1541/config.maildir.php		1970-01-01 01:00:00.000000000 +0100
++++ z-push-2.0.5-1541/config.maildir.php.package	2012-11-04 16:46:24.000000000 +0100
+@@ -0,0 +1,55 @@
++<?php
++/***********************************************
++* File      :   /etc/z-push/maildir.php
++* Project   :   Z-Push
++* Descr     :   configuration file for the
++*               Maildir backend.
++*
++* Created   :   01.10.2007
++*
++* Copyright 2007 - 2012 Zarafa Deutschland GmbH
++*
++* This program is free software: you can redistribute it and/or modify
++* it under the terms of the GNU Affero General Public License, version 3,
++* as published by the Free Software Foundation with the following additional
++* term according to sec. 7:
++*
++* According to sec. 7 of the GNU Affero General Public License, version 3,
++* the terms of the AGPL are supplemented with the following terms:
++*
++* "Zarafa" is a registered trademark of Zarafa B.V.
++* "Z-Push" is a registered trademark of Zarafa Deutschland GmbH
++* The licensing of the Program under the AGPL does not imply a trademark license.
++* Therefore any rights, title and interest in our trademarks remain entirely with us.
++*
++* However, if you propagate an unmodified version of the Program you are
++* allowed to use the term "Z-Push" to indicate that you distribute the Program.
++* Furthermore you may use our trademarks where it is necessary to indicate
++* the intended purpose of a product or service provided you use it in accordance
++* with honest practices in industrial or commercial matters.
++* If you want to propagate modified versions of the Program under the name "Z-Push",
++* you may only do so if you have a written permission by Zarafa Deutschland GmbH
++* (to acquire a permission please contact Zarafa at trademark@zarafa.com).
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++* GNU Affero General Public License for more details.
++*
++* You should have received a copy of the GNU Affero General Public License
++* along with this program.  If not, see <http://www.gnu.org/licenses/>.
++*
++* Consult LICENSE file for details
++************************************************/
++
++// Please do not forget to configure "BACKEND_PROVIDER" in /etc/z-push/config.php to
++// either "BackendMaildir" or "BackendCombined", if more than one data backend provider
++// has been installed!
++
++// Defines the Maildir base path
++define('MAILDIR_BASE', '/tmp');
++
++// Defines the name of the Maildir
++define('MAILDIR_SUBDIR', 'Maildir');
++
++?>
+--- z-push-2.0.5-1541/config.vcarddir.php		1970-01-01 01:00:00.000000000 +0100
++++ z-push-2.0.5-1541/config.vcarddir.php.package	2012-11-04 16:46:55.000000000 +0100
+@@ -0,0 +1,52 @@
++<?php
++/***********************************************
++* File      :   /etc/z-push/vcarddir.php
++* Project   :   Z-Push
++* Descr     :   configuration file for the
++*               vCard directory backend.
++*
++* Created   :   01.10.2007
++*
++* Copyright 2007 - 2012 Zarafa Deutschland GmbH
++*
++* This program is free software: you can redistribute it and/or modify
++* it under the terms of the GNU Affero General Public License, version 3,
++* as published by the Free Software Foundation with the following additional
++* term according to sec. 7:
++*
++* According to sec. 7 of the GNU Affero General Public License, version 3,
++* the terms of the AGPL are supplemented with the following terms:
++*
++* "Zarafa" is a registered trademark of Zarafa B.V.
++* "Z-Push" is a registered trademark of Zarafa Deutschland GmbH
++* The licensing of the Program under the AGPL does not imply a trademark license.
++* Therefore any rights, title and interest in our trademarks remain entirely with us.
++*
++* However, if you propagate an unmodified version of the Program you are
++* allowed to use the term "Z-Push" to indicate that you distribute the Program.
++* Furthermore you may use our trademarks where it is necessary to indicate
++* the intended purpose of a product or service provided you use it in accordance
++* with honest practices in industrial or commercial matters.
++* If you want to propagate modified versions of the Program under the name "Z-Push",
++* you may only do so if you have a written permission by Zarafa Deutschland GmbH
++* (to acquire a permission please contact Zarafa at trademark@zarafa.com).
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++* GNU Affero General Public License for more details.
++*
++* You should have received a copy of the GNU Affero General Public License
++* along with this program.  If not, see <http://www.gnu.org/licenses/>.
++*
++* Consult LICENSE file for details
++************************************************/
++
++// Please do not forget to configure "BACKEND_PROVIDER" in /etc/z-push/config.php to
++// either "BackendVCardDir" or "BackendCombined", if more than one data backend provider
++// has been installed!
++
++// Defines the vCard directory path
++define('VCARDDIR_DIR', '/home/%u/.kde/share/apps/kabc/stdvcf');
++
++?>
+--- z-push-2.0.5-1541/backend/zarafa/config.php		1970-01-01 01:00:00.000000000 +0100
++++ z-push-2.0.5-1541/backend/zarafa/config.php.package	2012-11-04 16:45:42.000000000 +0100
+@@ -0,0 +1,52 @@
++<?php
++/***********************************************
++* File      :   /etc/z-push/zarafa.php
++* Project   :   Z-Push
++* Descr     :   configuration file for the
++*               Zarafa backend.
++*
++* Created   :   01.10.2007
++*
++* Copyright 2007 - 2012 Zarafa Deutschland GmbH
++*
++* This program is free software: you can redistribute it and/or modify
++* it under the terms of the GNU Affero General Public License, version 3,
++* as published by the Free Software Foundation with the following additional
++* term according to sec. 7:
++*
++* According to sec. 7 of the GNU Affero General Public License, version 3,
++* the terms of the AGPL are supplemented with the following terms:
++*
++* "Zarafa" is a registered trademark of Zarafa B.V.
++* "Z-Push" is a registered trademark of Zarafa Deutschland GmbH
++* The licensing of the Program under the AGPL does not imply a trademark license.
++* Therefore any rights, title and interest in our trademarks remain entirely with us.
++*
++* However, if you propagate an unmodified version of the Program you are
++* allowed to use the term "Z-Push" to indicate that you distribute the Program.
++* Furthermore you may use our trademarks where it is necessary to indicate
++* the intended purpose of a product or service provided you use it in accordance
++* with honest practices in industrial or commercial matters.
++* If you want to propagate modified versions of the Program under the name "Z-Push",
++* you may only do so if you have a written permission by Zarafa Deutschland GmbH
++* (to acquire a permission please contact Zarafa at trademark@zarafa.com).
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++* GNU Affero General Public License for more details.
++*
++* You should have received a copy of the GNU Affero General Public License
++* along with this program.  If not, see <http://www.gnu.org/licenses/>.
++*
++* Consult LICENSE file for details
++************************************************/
++
++// Please do not forget to configure "BACKEND_PROVIDER" in /etc/z-push/config.php to
++// either "BackendZarafa" or "BackendCombined", if more than one data backend provider
++// has been installed!
++
++// Defines the server to which we want to connect
++define('MAPI_SERVER', 'file:///var/run/zarafa');
++
++?>
+--- z-push-2.0.5-1541/backend/imap.php			2012-08-30 21:41:25.000000000 +0200
++++ z-push-2.0.5-1541/backend/imap.php.package		2012-11-04 17:17:30.000000000 +0100
+@@ -43,6 +43,9 @@
+ * Consult LICENSE file for details
+ ************************************************/
+ 
++// Include the IMAP backend's own config file
++require_once("backend/imap/config.php");
++
+ include_once('lib/default/diffbackend/diffbackend.php');
+ include_once('include/mimeDecode.php');
+ require_once('include/z_RFC822.php');
+--- z-push-2.0.5-1541/backend/maildir.php		2012-02-07 21:24:18.000000000 +0100
++++ z-push-2.0.5-1541/backend/maildir.php.package	2012-11-04 17:17:47.000000000 +0100
+@@ -53,6 +53,9 @@
+ * Consult LICENSE file for details
+ ************************************************/
+ 
++// Include the Maildir backend's own config file
++require_once("backend/maildir/config.php");
++
+ include_once('lib/default/diffbackend/diffbackend.php');
+ include_once('include/mimeDecode.php');
+ require_once('include/z_RFC822.php');
+--- z-push-2.0.5-1541/backend/vcarddir.php		2012-02-07 21:24:18.000000000 +0100
++++ z-push-2.0.5-1541/backend/vcarddir.php.package	2012-11-04 17:18:06.000000000 +0100
+@@ -40,6 +40,10 @@
+ *
+ * Consult LICENSE file for details
+ ************************************************/
++
++// Include the vCard directory backend's own config file
++require_once("backend/vcarddir/config.php");
++
+ include_once('lib/default/diffbackend/diffbackend.php');
+ 
+ class BackendVCardDir extends BackendDiff {
+--- z-push-2.0.5-1541/backend/zarafa/zarafa.php		2012-08-30 21:41:25.000000000 +0200
++++ z-push-2.0.5-1541/backend/zarafa/zarafa.php.package	2012-11-04 18:34:46.000000000 +0100
+@@ -45,6 +45,9 @@
+ * Consult LICENSE file for details
+ *************************************************/
+ 
++// Include the Zarafa backend's own config file
++require_once("backend/zarafa/config.php");
++
+ // include PHP-MAPI classes
+ include_once('backend/zarafa/mapi/mapi.util.php');
+ include_once('backend/zarafa/mapi/mapidefs.php');
+--- z-push-2.0.5-1541/lib/core/zpush.php		2012-06-02 07:03:16.000000000 +0200
++++ z-push-2.0.5-1541/lib/core/zpush.php.package	2012-11-04 18:30:42.000000000 +0100
+@@ -439,6 +439,21 @@
+         if (!isset(ZPush::$backend)) {
+             // Initialize our backend
+             $ourBackend = @constant('BACKEND_PROVIDER');
++
++            // Some admin-friendly guessing if no backend has been configured
++            if (empty($ourBackend)) {
++                if (file_exists(REAL_BASE_PATH . "backend/zarafa/"))
++                    $ourBackend = "BackendZarafa";
++                elseif (file_exists(REAL_BASE_PATH . "backend/imap/"))
++                    $ourBackend = "BackendIMAP";
++                elseif (file_exists(REAL_BASE_PATH . "backend/maildir/"))
++                    $ourBackend = "BackendMaildir";
++                elseif (file_exists(REAL_BASE_PATH . "backend/vcarddir/"))
++                    $ourBackend = "BackendVCardDir";
++                else
++                    throw new FatalMisconfigurationException("No backend provider has been configured. Check configuration!");
++            }
++
+             self::IncludeBackend($ourBackend);
+ 
+             if (class_exists($ourBackend))
+--- z-push-2.0.5-1541/z-push-admin.php			2012-07-21 17:20:52.000000000 +0200
++++ z-push-2.0.5-1541/z-push-admin.php.package		2012-11-04 15:16:15.000000000 +0100
+@@ -44,6 +44,10 @@
+ * Consult LICENSE file for details
+ ************************************************/
+ 
++// Script stays in /usr/sbin and is not a symlink to /usr/share/z-push
++define('BASE_PATH_CLI', "/usr/share/z-push/");
++set_include_path(get_include_path() . PATH_SEPARATOR . BASE_PATH_CLI);
++
+ include('lib/core/zpushdefs.php');
+ include('lib/core/zpush.php');
+ include('lib/core/stateobject.php');
+@@ -102,8 +106,6 @@
+ /************************************************
+  * MAIN
+  */
+-    define('BASE_PATH_CLI',  dirname(__FILE__) ."/");
+-    set_include_path(get_include_path() . PATH_SEPARATOR . BASE_PATH_CLI);
+     try {
+         ZPush::CheckConfig();
+         ZPushAdminCLI::CheckEnv();
+--- z-push-2.0.5-1541/z-push-top.php			2012-10-17 22:57:36.000000000 +0200
++++ z-push-2.0.5-1541/z-push-top.php.package		2012-11-08 21:38:01.000000000 +0100
+@@ -44,6 +44,10 @@
+ * Consult LICENSE file for details
+ ************************************************/
+ 
++// Script stays in /usr/sbin and is not a symlink to /usr/share/z-push
++define('BASE_PATH_CLI', "/usr/share/z-push/");
++set_include_path(get_include_path() . PATH_SEPARATOR . BASE_PATH_CLI);
++
+ include('lib/exceptions/exceptions.php');
+ include('lib/core/zpushdefs.php');
+ include('lib/core/zpush.php');
+@@ -60,7 +64,6 @@
+  * MAIN
+  */
+     declare(ticks = 1);
+-    define('BASE_PATH_CLI',  dirname(__FILE__) ."/");
+ 
+     try {
+         ZPush::CheckConfig();
+@@ -88,6 +91,7 @@
+     }
+ 
+     echo "terminated\n";
++    system("bash -c 'stty sane'");
+ 
+ 
+ /************************************************
