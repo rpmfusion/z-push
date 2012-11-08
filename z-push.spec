@@ -101,8 +101,7 @@ install this package.
 
 %prep
 %setup -q -n %{name}-%{version}-%{svnrevision}
-%patch0 -p1 -b .package
-touch -c -r config.php{.package,} config.*.php backend/zarafa/config.php
+%patch0 -p1
 
 %build
 
@@ -142,7 +141,7 @@ install -D -p -m 644 %{SOURCE3} $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d/%{nam
 install -D -p -m 644 %{SOURCE4} $RPM_BUILD_ROOT%{_sysconfdir}/logrotate.d/%{name}
 
 # Remove all unwanted files and directories
-rm -rf $RPM_BUILD_ROOT%{_datadir}/%{name}/{INSTALL,LICENSE,backend/kolab,{.,*,*/*}/*.package}
+rm -rf $RPM_BUILD_ROOT%{_datadir}/%{name}/{INSTALL,LICENSE,backend/kolab}
 
 # Copy permission and README for later usage
 cp -pf %{SOURCE1} permission.pdf
