@@ -1,8 +1,8 @@
-%global svnrevision 1541
+%global svnrevision 1616
 
 Summary:        ActiveSync over-the-air implementation for mobile syncing
 Name:           z-push
-Version:        2.0.5
+Version:        2.0.6
 Release:        1%{?dist}
 License:        AGPLv3 with exceptions
 Group:          Applications/Productivity
@@ -12,7 +12,7 @@ Source1:        z-push-permission.pdf
 Source2:        z-push-README.FEDORA
 Source3:        z-push.conf
 Source4:        z-push.logrotate
-Patch0:         z-push-2.0.5-package.patch
+Patch0:         z-push-2.0.6-package.patch
 Requires:       httpd, php-iconv, php-sysvsem, php-sysvshm
 Requires:       coreutils, bash, grep, less, php-pcntl
 # Bug: php53 from RHEL 5 does not provide php (#717158)
@@ -101,8 +101,7 @@ install this package.
 
 %prep
 %setup -q -n %{name}-%{version}-%{svnrevision}
-%patch0 -p1 -b .package
-touch -c -r config.php{.package,} config.*.php backend/zarafa/config.php
+%patch0 -p1
 
 %build
 
@@ -142,7 +141,7 @@ install -D -p -m 644 %{SOURCE3} $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d/%{nam
 install -D -p -m 644 %{SOURCE4} $RPM_BUILD_ROOT%{_sysconfdir}/logrotate.d/%{name}
 
 # Remove all unwanted files and directories
-rm -rf $RPM_BUILD_ROOT%{_datadir}/%{name}/{INSTALL,LICENSE,backend/kolab,{.,*,*/*}/*.package}
+rm -rf $RPM_BUILD_ROOT%{_datadir}/%{name}/{INSTALL,LICENSE,backend/kolab}
 
 # Copy permission and README for later usage
 cp -pf %{SOURCE1} permission.pdf
@@ -201,6 +200,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/backend/zarafa/
 
 %changelog
+* Thu Dec 06 2012 Robert Scheck <robert@fedoraproject.org> 2.0.6-1
+- Upgrade to 2.0.6
+
 * Thu Nov 08 2012 Robert Scheck <robert@fedoraproject.org> 2.0.5-1
 - Upgrade to 2.0.5
 
