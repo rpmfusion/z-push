@@ -3,7 +3,7 @@
 Summary:        ActiveSync over-the-air implementation for mobile syncing
 Name:           z-push
 Version:        2.0.7
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        AGPLv3 with exceptions
 Group:          Applications/Productivity
 URL:            http://z-push.sourceforge.net/
@@ -200,6 +200,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/backend/zarafa/
 
 %changelog
+* Mon Aug 05 2013 Robert Scheck <robert@fedoraproject.org> 2.0.7-3
+- Added configuration compatibility for Apache 2.2 and 2.4
+
 * Sun Apr 28 2013 Nicolas Chauvet <kwizart@gmail.com> - 2.0.7-2
 - https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild
 
