@@ -1,9 +1,9 @@
-%global svnrevision 1690
+%global svnrevision 1787
 
 Summary:        ActiveSync over-the-air implementation for mobile syncing
 Name:           z-push
-Version:        2.0.7
-Release:        3%{?dist}
+Version:        2.0.9
+Release:        1%{?dist}
 License:        AGPLv3 with exceptions
 Group:          Applications/Productivity
 URL:            http://z-push.sourceforge.net/
@@ -12,7 +12,7 @@ Source1:        z-push-permission.pdf
 Source2:        z-push-README.FEDORA
 Source3:        z-push.conf
 Source4:        z-push.logrotate
-Patch0:         z-push-2.0.6-package.patch
+Patch0:         z-push-2.0.9-package.patch
 Requires:       httpd, php-iconv, php-sysvsem, php-sysvshm
 Requires:       coreutils, bash, grep, less, php-pcntl
 # Bug: php53 from RHEL 5 does not provide php (#717158)
@@ -200,6 +200,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/backend/zarafa/
 
 %changelog
+* Sun Dec 08 2013 Robert Scheck <robert@fedoraproject.org> 2.0.9-1
+- Upgrade to 2.0.9
+
 * Mon Aug 05 2013 Robert Scheck <robert@fedoraproject.org> 2.0.7-3
 - Added configuration compatibility for Apache 2.2 and 2.4
 
