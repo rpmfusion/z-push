@@ -80,6 +80,12 @@ users by adding them comma separated to $specialLogUsers in the config.php
  Z-Push will be quite talkative, so it is advisable to use log-rotate
  on the log file.
 
+There might be repeated incorrect password messages if a password contains
+characters which are encoded differently in ISO-8859-1 and Windows-1252
+encodings (e.g. "§") the login might fail with Z-Push but it works fine with
+the WebApp/Webaccess. Solution is to add setlocale(LC_CTYPE, "en_US.UTF-8");
+to the config.php file.
+
 
 Documentation
 -------------
@@ -87,3 +93,58 @@ Documentation
 Further information can be found in the Zarafa Z-Push configuration manual
 http://doc.zarafa.com/trunk/Administrator_Manual/en-US/html/_zpush.html and
 at the homepage of Z-Push, http://z-push.sourceforge.net.
+
+
+Upgrade
+-------
+
+*Important* States of Z-Push 2.0 and Z-Push 2.1 are not compatible. A state
+migration script is available in the /usr/share/z-push/tools/ folder.
+
+Please also observe the published release notes of the new Z-Push version.
+For some releases it is necessary to e.g. resynchronize the mobile. 
+
+
+S/MIME
+------
+
+Z-Push supports signing and en-/decrypting of emails on mobile devices since
+the version 2.0.7.
+
+*Important* Currently only Android 4.X and higher and Apple iOS 5 and higher
+devices are known to support encryption/signing of emails.
+
+It might be possible that PHP functions require CA information in order to
+validate certs. Therefore the CAINFO parameter in the config.php must be
+configured properly.
+
+The major part of S/MIME deployment is the PKI setup. It includes the
+public-private key/certificate obtaining, their management in directory
+service and roll-out to the mobile devices. Individual certificates can
+either be obtained from a local (company intern) or a public CA. There are
+various public CAs offering certificates: commercial ones e.g. Symantec or
+Comodo or community-driven e.g. CAcert.org.
+
+Both most popular directory services Microsoft Active Directory (MS ADS)
+and free open source solution OpenLDAP allow to save certificates. Private
+keys/certificates reside in user's directory or on a smartcard. Public
+certificates are saved in directory. Both, Microsoft Active Directory and
+OpenLDAP use the userCertificate attribute to save it.
+
+In the Active Directory the public key for contacts from GAB is saved in
+PR_EMS_AB_TAGGED_X509_CERT (0x8C6A1102) property and if you save a key in a
+contact it’s PR_USER_X509_CERTIFICATE (0x3A701102).
+
+In LDAP public key for contacts from GAB is saved in userCertificate
+property. It should be mapped to 0x3A220102 in ldap.propmap.cfg
+(0x3A220102 = userCertificate). Make sure it looks like this in LDAP:
+
+userCertificate;binary
+    MIIFGjCCBAKgAwIBAgIQbRnqpxlPa… 
+
+*Important* It is strongly recommended to use MS AD or LDAP to manage the
+certificates. Other user plugin backend options like db or unix might not
+work correctly and are not supported.
+
+For in-depth information please refer to: http://www.zarafa.com/blog/post/
+2013/05/smime-z-push-signing-and-en-decrypting-emails-mobile-devices 
