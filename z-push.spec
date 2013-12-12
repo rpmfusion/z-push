@@ -1,18 +1,18 @@
-%global svnrevision 1787
+%global svnrevision 1788
 
 Summary:        ActiveSync over-the-air implementation for mobile syncing
 Name:           z-push
-Version:        2.0.9
+Version:        2.1.1
 Release:        1%{?dist}
 License:        AGPLv3 with exceptions
 Group:          Applications/Productivity
 URL:            http://z-push.sourceforge.net/
-Source0:        http://www.zarafa-deutschland.de/z-push-download/final/2.0/%{name}-%{version}-%{svnrevision}.tar.gz
+Source0:        http://www.zarafa-deutschland.de/z-push-download/final/2.1/%{name}-%{version}-%{svnrevision}.tar.gz
 Source1:        z-push-permission.pdf
 Source2:        z-push-README.FEDORA
 Source3:        z-push.conf
 Source4:        z-push.logrotate
-Patch0:         z-push-2.0.9-package.patch
+Patch0:         z-push-2.1.1-package.patch
 Requires:       httpd, php-iconv, php-sysvsem, php-sysvshm
 Requires:       coreutils, bash, grep, less, php-pcntl
 # Bug: php53 from RHEL 5 does not provide php (#717158)
@@ -89,7 +89,7 @@ you will need to install this package.
 %package zarafa
 Summary:        Zarafa data backend provider for Z-Push
 Group:          Applications/Productivity
-Requires:       %{name} = %{version}-%{release}, php-mapi >= 6.40.0
+Requires:       %{name} = %{version}-%{release}, php-mapi >= 7.0.6
 Provides:       zarafa-%{name} = %{version}-%{release}
 Obsoletes:      zarafa-%{name} < %{version}-%{release}
 
@@ -118,14 +118,7 @@ cp -af * $RPM_BUILD_ROOT%{_datadir}/%{name}/
 mv -f $RPM_BUILD_ROOT%{_datadir}/%{name}/config.php $RPM_BUILD_ROOT%{_sysconfdir}/%{name}/config.php
 ln -sf ../../..%{_sysconfdir}/%{name}/config.php $RPM_BUILD_ROOT%{_datadir}/%{name}/config.php
 
-for backend in imap maildir vcarddir; do
-  mkdir -p $RPM_BUILD_ROOT%{_datadir}/%{name}/backend/${backend}/
-  mv -f $RPM_BUILD_ROOT%{_datadir}/%{name}/backend/${backend}.php $RPM_BUILD_ROOT%{_datadir}/%{name}/backend/${backend}/
-  mv -f $RPM_BUILD_ROOT%{_datadir}/%{name}/config.${backend}.php $RPM_BUILD_ROOT%{_sysconfdir}/%{name}/${backend}.php
-  ln -sf ../../../../..%{_sysconfdir}/%{name}/${backend}.php $RPM_BUILD_ROOT%{_datadir}/%{name}/backend/${backend}/config.php
-done
-
-for backend in combined searchldap zarafa; do
+for backend in combined imap maildir searchldap vcarddir zarafa; do
   mv -f $RPM_BUILD_ROOT%{_datadir}/%{name}/backend/${backend}/config.php $RPM_BUILD_ROOT%{_sysconfdir}/%{name}/${backend}.php
   ln -sf ../../../../..%{_sysconfdir}/%{name}/${backend}.php $RPM_BUILD_ROOT%{_datadir}/%{name}/backend/${backend}/config.php
 done
@@ -141,7 +134,7 @@ install -D -p -m 644 %{SOURCE3} $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d/%{nam
 install -D -p -m 644 %{SOURCE4} $RPM_BUILD_ROOT%{_sysconfdir}/logrotate.d/%{name}
 
 # Remove all unwanted files and directories
-rm -rf $RPM_BUILD_ROOT%{_datadir}/%{name}/{INSTALL,LICENSE,backend/kolab}
+rm -rf $RPM_BUILD_ROOT%{_datadir}/%{name}/{INSTALL,LICENSE}
 
 # Copy permission and README for later usage
 cp -pf %{SOURCE1} permission.pdf
@@ -200,6 +193,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/backend/zarafa/
 
 %changelog
+* Thu Dec 12 2013 Robert Scheck <robert@fedoraproject.org> 2.1.1-1
+- Upgrade to 2.1.1
+
 * Sun Dec 08 2013 Robert Scheck <robert@fedoraproject.org> 2.0.9-1
 - Upgrade to 2.0.9
 
