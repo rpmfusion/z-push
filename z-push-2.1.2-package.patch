@@ -1,9 +1,9 @@
-Patch by Robert Scheck <robert@fedoraproject.org> for z-push >= 2.1.1, which changes the original
+Patch by Robert Scheck <robert@fedoraproject.org> for z-push >= 2.1.2, which changes the original
 paths from Z-Push upstream to Fedora compliant ones. Additionally, it adds some installation and
 configuration hints regarding multiple data backend providers.
 
---- z-push-2.1.1-1788/config.php				2013-11-06 19:20:31.000000000 +0100
-+++ z-push-2.1.1-1788/config.php.package			2013-12-12 16:19:30.000000000 +0100
+--- z-push-2.1.2-1873/config.php				2014-02-21 20:10:16.000000000 +0100
++++ z-push-2.1.2-1873/config.php.package			2014-05-27 11:51:32.000000000 +0200
 @@ -60,6 +60,7 @@
      // This setting specifies the owner parameter in the certificate to look at.
      define("CERTIFICATE_OWNER_PARAMETER", "SSL_CLIENT_S_DN_CN");
@@ -20,9 +20,9 @@ configuration hints regarding multiple data backend providers.
  /**********************************************************************************
   *  Mobile settings
   */
-@@ -185,19 +187,33 @@
-     // default: 49152 - 48 KB default max photo size in bytes
-     define('SYNC_CONTACTS_MAXPICTURESIZE', 49152);
+@@ -192,19 +194,33 @@
+     // this full list, so this feature is disabled by default. Enable with care.
+     define('ALLOW_WEBSERVICE_USERS_ACCESS', false);
  
 +
  /**********************************************************************************
@@ -56,8 +56,8 @@ configuration hints regarding multiple data backend providers.
   */
      define('SEARCH_PROVIDER', '');
      // Time in seconds for the server search. Setting it too high might result in timeout.
---- z-push-2.1.1-1788/z-push-admin.php				2013-02-28 22:02:27.000000000 +0100
-+++ z-push-2.1.1-1788/z-push-admin.php.package			2013-12-12 16:20:55.000000000 +0100
+--- z-push-2.1.2-1873/z-push-admin.php				2013-02-28 22:02:27.000000000 +0100
++++ z-push-2.1.2-1873/z-push-admin.php.package			2013-12-12 16:20:55.000000000 +0100
 @@ -44,6 +44,10 @@
  * Consult LICENSE file for details
  ************************************************/
@@ -78,8 +78,8 @@ configuration hints regarding multiple data backend providers.
      try {
          ZPush::CheckConfig();
          ZPushAdminCLI::CheckEnv();
---- z-push-2.1.1-1788/z-push-top.php				2013-01-04 17:51:29.000000000 +0100
-+++ z-push-2.1.1-1788/z-push-top.php.package			2013-12-12 16:21:28.000000000 +0100
+--- z-push-2.1.2-1873/z-push-top.php				2013-01-04 17:51:29.000000000 +0100
++++ z-push-2.1.2-1873/z-push-top.php.package			2013-12-12 16:21:28.000000000 +0100
 @@ -44,6 +44,10 @@
  * Consult LICENSE file for details
  ************************************************/
@@ -99,8 +99,8 @@ configuration hints regarding multiple data backend providers.
  
      try {
          ZPush::CheckConfig();
---- z-push-2.1.1-1788/tools/migrate-2.0.x-2.1.0.php		2013-09-05 20:50:34.000000000 +0200
-+++ z-push-2.1.1-1788/tools/migrate-2.0.x-2.1.0.php.package	2013-12-12 22:04:34.000000000 +0100
+--- z-push-2.1.2-1873/tools/migrate-2.0.x-2.1.0.php		2013-09-05 20:50:34.000000000 +0200
++++ z-push-2.1.2-1873/tools/migrate-2.0.x-2.1.0.php.package	2013-12-12 22:04:34.000000000 +0100
 @@ -44,7 +44,7 @@
  ************************************************/
  
