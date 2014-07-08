@@ -1,13 +1,13 @@
-%global svnrevision 1873
+%global svnrevision 1892
 
 Summary:        ActiveSync over-the-air implementation for mobile syncing
 Name:           z-push
-Version:        2.1.2
+Version:        2.1.3
 Release:        1%{?dist}
 License:        AGPLv3 with exceptions
 Group:          Applications/Productivity
-URL:            http://z-push.sourceforge.net/
-Source0:        http://www.zarafa-deutschland.de/z-push-download/final/2.1/%{name}-%{version}-%{svnrevision}.tar.gz
+URL:            http://www.z-push.org/
+Source0:        http://download.z-push.org/final/2.1/%{name}-%{version}-%{svnrevision}.tar.gz
 Source1:        z-push-permission.pdf
 Source2:        z-push-README.FEDORA
 Source3:        z-push.conf
@@ -193,6 +193,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/backend/zarafa/
 
 %changelog
+* Mon Jun 30 2014 Robert Scheck <robert@fedoraproject.org> 2.1.3-1
+- Upgrade to 2.1.3
+
 * Tue May 27 2014 Robert Scheck <robert@fedoraproject.org> 2.1.2-1
 - Upgrade to 2.1.2
 
