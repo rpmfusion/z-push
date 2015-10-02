@@ -1,18 +1,18 @@
-%global svnrevision 1892
-
 Summary:        ActiveSync over-the-air implementation for mobile syncing
 Name:           z-push
-Version:        2.1.3
+Version:        2.2.4
 Release:        1%{?dist}
 License:        AGPLv3 with exceptions
 Group:          Applications/Productivity
-URL:            http://www.z-push.org/
-Source0:        http://download.z-push.org/final/2.1/%{name}-%{version}-%{svnrevision}.tar.gz
+URL:            https://z-push.org/
+Source0:        http://download.z-push.org/final/2.2/%{name}-%{version}.tar.gz
 Source1:        z-push-permission.pdf
 Source2:        z-push-README.FEDORA
-Source3:        z-push.conf
-Source4:        z-push.logrotate
-Patch0:         z-push-2.1.2-package.patch
+Source3:        z-push-autodiscover-README.FEDORA
+Source4:        z-push.conf
+Source5:        z-push-autodiscover.conf
+Source6:        z-push.logrotate
+Patch0:         z-push-2.2.4-package.patch
 Requires:       httpd, php-iconv, php-sysvsem, php-sysvshm
 Requires:       coreutils, bash, grep, less, php-pcntl
 # Bug: php53 from RHEL 5 does not provide php (#717158)
@@ -29,6 +29,20 @@ Z-Push is an implementation of the ActiveSync protocol which is used
 'over-the-air' for multi platform ActiveSync devices, including Windows
 Mobile, Android, iPhone, Sony Ericsson and Nokia mobile devices. With
 Z-Push any groupware can be connected and synced with these devices.
+
+%package autodiscover
+Summary:        Simplify account configuration for ActiveSync users
+Group:          Applications/Productivity
+Requires:       %{name} = %{version}-%{release}, php-xml >= 5.1.0
+
+%description autodiscover
+The z-push-autodiscover package contains the AutoDiscover service to
+simplify the account configuration for clients, especially for mobile
+phones. While in the past the user was required to enter the server
+name, username and password manually into his mobile phone in order to
+connect, with AutoDiscover the user is only required to fill in his
+e-mail address and the password. AutoDiscover will try several methods
+to reach the correct server automatically.
 
 %package combined
 Summary:        Combines several data backend providers for Z-Push
@@ -89,7 +103,7 @@ you will need to install this package.
 %package zarafa
 Summary:        Zarafa data backend provider for Z-Push
 Group:          Applications/Productivity
-Requires:       %{name} = %{version}-%{release}, php-mapi >= 7.0.6
+Requires:       %{name} = %{version}-%{release}, php-mapi >= 7.1.11
 Provides:       zarafa-%{name} = %{version}-%{release}
 Obsoletes:      zarafa-%{name} < %{version}-%{release}
 
@@ -100,7 +114,7 @@ based service or the Zarafa Collaboration Plattform, you will need to
 install this package.
 
 %prep
-%setup -q -n %{name}-%{version}-%{svnrevision}
+%setup -q -n %{name}-%{version}
 %patch0 -p1
 
 %build
@@ -123,29 +137,39 @@ for backend in combined imap maildir searchldap vcarddir zarafa; do
   ln -sf ../../../../..%{_sysconfdir}/%{name}/${backend}.php $RPM_BUILD_ROOT%{_datadir}/%{name}/backend/${backend}/config.php
 done
 
+mv -f $RPM_BUILD_ROOT%{_datadir}/%{name}/autodiscover/config.php $RPM_BUILD_ROOT%{_sysconfdir}/%{name}/autodiscover.php
+ln -sf ../../../..%{_sysconfdir}/%{name}/${backend}.php $RPM_BUILD_ROOT%{_datadir}/%{name}/autodiscover/config.php
+
 # Install the command line utilities
 mv -f $RPM_BUILD_ROOT%{_datadir}/%{name}/%{name}-admin.php $RPM_BUILD_ROOT%{_sbindir}/%{name}-admin
 mv -f $RPM_BUILD_ROOT%{_datadir}/%{name}/%{name}-top.php $RPM_BUILD_ROOT%{_sbindir}/%{name}-top
 
-# Install the apache configuration file
-install -D -p -m 644 %{SOURCE3} $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d/%{name}.conf
+# Install the apache configuration files
+install -D -p -m 644 %{SOURCE4} $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d/%{name}.conf
+install -D -p -m 644 %{SOURCE5} $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d/%{name}-autodiscover.conf
 
 # Install the logrotate configuration file
-install -D -p -m 644 %{SOURCE4} $RPM_BUILD_ROOT%{_sysconfdir}/logrotate.d/%{name}
+install -D -p -m 644 %{SOURCE6} $RPM_BUILD_ROOT%{_sysconfdir}/logrotate.d/%{name}
 
 # Remove all unwanted files and directories
-rm -rf $RPM_BUILD_ROOT%{_datadir}/%{name}/{INSTALL,LICENSE}
+rm -rf $RPM_BUILD_ROOT%{_datadir}/%{name}/{autodiscover/INSTALL,composer.json,INSTALL,LICENSE}
+
+# Correct the wrong file permissions
+chmod 644 $RPM_BUILD_ROOT%{_datadir}/%{name}/lib/syncobjects/syncresolverecipient.php
 
 # Copy permission and README for later usage
 cp -pf %{SOURCE1} permission.pdf
 cp -pf %{SOURCE2} README.FEDORA
+cp -pf %{SOURCE3} autodiscover/README.FEDORA
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc LICENSE README.FEDORA permission.pdf
+%{!?_licensedir:%global license %%doc}
+%license LICENSE permission.pdf
+%doc README.FEDORA
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}.conf
 %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %dir %{_sysconfdir}/%{name}/
@@ -153,6 +177,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_sbindir}/z-push-admin
 %{_sbindir}/z-push-top
 %{_datadir}/%{name}/
+%exclude %{_datadir}/%{name}/autodiscover/
 %exclude %{_datadir}/%{name}/backend/combined/
 %exclude %{_datadir}/%{name}/backend/imap/
 %exclude %{_datadir}/%{name}/backend/maildir/
@@ -161,6 +186,13 @@ rm -rf $RPM_BUILD_ROOT
 %exclude %{_datadir}/%{name}/backend/zarafa/
 %attr(-,apache,apache) %dir %{_localstatedir}/lib/%{name}/
 %attr(-,apache,apache) %dir %{_localstatedir}/log/%{name}/
+
+%files autodiscover
+%defattr(-,root,root,-)
+%doc autodiscover/README.FEDORA
+%config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}-autodiscover.conf
+%config(noreplace) %{_sysconfdir}/%{name}/autodiscover.php
+%{_datadir}/%{name}/autodiscover/
 
 %files combined
 %defattr(-,root,root,-)
@@ -193,6 +225,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/backend/zarafa/
 
 %changelog
+* Fri Oct 02 2015 Robert Scheck <robert@fedoraproject.org> 2.2.4-1
+- Upgrade to 2.2.4
+
 * Mon Jun 30 2014 Robert Scheck <robert@fedoraproject.org> 2.1.3-1
 - Upgrade to 2.1.3
 
