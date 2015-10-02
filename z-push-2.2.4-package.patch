@@ -1,18 +1,19 @@
-Patch by Robert Scheck <robert@fedoraproject.org> for z-push >= 2.1.2, which changes the original
+Patch by Robert Scheck <robert@fedoraproject.org> for z-push >= 2.2.4, which changes the original
 paths from Z-Push upstream to Fedora compliant ones. Additionally, it adds some installation and
 configuration hints regarding multiple data backend providers.
 
---- z-push-2.1.2-1873/config.php				2014-02-21 20:10:16.000000000 +0100
-+++ z-push-2.1.2-1873/config.php.package			2014-05-27 11:51:32.000000000 +0200
-@@ -60,6 +60,7 @@
-     // This setting specifies the owner parameter in the certificate to look at.
-     define("CERTIFICATE_OWNER_PARAMETER", "SSL_CLIENT_S_DN_CN");
- 
+--- z-push-2.2.4/config.php					2015-09-30 15:05:38.000000000 +0200
++++ z-push-2.2.4/config.php.package.				2015-10-02 16:41:22.017747249 +0200
+@@ -69,6 +69,8 @@
+      * true - use the complete email address.
+      */
+     define('USE_FULLEMAIL_FOR_LOGIN', false);
++
 +
  /**********************************************************************************
   *  Default FileStateMachine settings
   */
-@@ -101,6 +102,7 @@
+@@ -110,6 +112,7 @@
      // Uncomment and modify the following line if the validation of the certificates fails.
      // define('CAINFO', '/etc/ssl/certs/EmailCA.pem');
  
@@ -20,9 +21,9 @@ configuration hints regarding multiple data backend providers.
  /**********************************************************************************
   *  Mobile settings
   */
-@@ -192,19 +194,33 @@
-     // this full list, so this feature is disabled by default. Enable with care.
-     define('ALLOW_WEBSERVICE_USERS_ACCESS', false);
+@@ -208,19 +211,33 @@
+     // NOTE: THIS IS AN EXPERIMENTAL FEATURE WHICH COULD PREVENT YOUR MOBILES FROM SYNCHRONIZING.
+     define('USE_PARTIAL_FOLDERSYNC', false);
  
 +
  /**********************************************************************************
@@ -56,8 +57,8 @@ configuration hints regarding multiple data backend providers.
   */
      define('SEARCH_PROVIDER', '');
      // Time in seconds for the server search. Setting it too high might result in timeout.
---- z-push-2.1.2-1873/z-push-admin.php				2013-02-28 22:02:27.000000000 +0100
-+++ z-push-2.1.2-1873/z-push-admin.php.package			2013-12-12 16:20:55.000000000 +0100
+--- z-push-2.2.4/z-push-admin.php				2015-09-30 19:10:45.000000000 +0200
++++ z-push-2.2.4/z-push-admin.php.package			2015-10-02 16:41:57.955453602 +0200
 @@ -44,6 +44,10 @@
  * Consult LICENSE file for details
  ************************************************/
@@ -69,7 +70,7 @@ configuration hints regarding multiple data backend providers.
  include('lib/core/zpushdefs.php');
  include('lib/core/zpush.php');
  include('lib/core/stateobject.php');
-@@ -102,8 +106,6 @@
+@@ -103,8 +107,6 @@
  /************************************************
   * MAIN
   */
@@ -78,8 +79,8 @@ configuration hints regarding multiple data backend providers.
      try {
          ZPush::CheckConfig();
          ZPushAdminCLI::CheckEnv();
---- z-push-2.1.2-1873/z-push-top.php				2013-01-04 17:51:29.000000000 +0100
-+++ z-push-2.1.2-1873/z-push-top.php.package			2013-12-12 16:21:28.000000000 +0100
+--- z-push-2.2.4/z-push-top.php					2015-09-30 19:10:44.000000000 +0200
++++ z-push-2.2.4/z-push-top.php.package				2015-10-02 16:42:27.440212676 +0200
 @@ -44,6 +44,10 @@
  * Consult LICENSE file for details
  ************************************************/
@@ -91,7 +92,7 @@ configuration hints regarding multiple data backend providers.
  include('lib/exceptions/exceptions.php');
  include('lib/core/zpushdefs.php');
  include('lib/core/zpush.php');
-@@ -60,7 +64,6 @@
+@@ -61,7 +65,6 @@
   * MAIN
   */
      declare(ticks = 1);
@@ -99,14 +100,50 @@ configuration hints regarding multiple data backend providers.
  
      try {
          ZPush::CheckConfig();
---- z-push-2.1.2-1873/tools/migrate-2.0.x-2.1.0.php		2013-09-05 20:50:34.000000000 +0200
-+++ z-push-2.1.2-1873/tools/migrate-2.0.x-2.1.0.php.package	2013-12-12 22:04:34.000000000 +0100
+--- z-push-2.2.4/tools/migrate-2.0.x-2.1.0.php			2015-09-30 19:10:45.000000000 +0200
++++ z-push-2.2.4/tools/migrate-2.0.x-2.1.0.php.package		2015-10-02 16:42:51.376017089 +0200
 @@ -44,7 +44,7 @@
  ************************************************/
  
  // Please adjust to match your z-push installation directory, usually /usr/share/z-push
--define('ZPUSH_BASE_PATH', "../");
+-define('ZPUSH_BASE_PATH', "../src");
 +define('ZPUSH_BASE_PATH', "/usr/share/z-push/");
  
  
  
+--- z-push-2.2.4/autodiscover/config.php			2015-09-30 15:05:39.000000000 +0200
++++ z-push-2.2.4/autodiscover/config.php.package		2015-10-02 17:02:20.586475499 +0200
+@@ -59,6 +59,7 @@
+      */
+     define('USE_FULLEMAIL_FOR_LOGIN', false);
+ 
++
+ /**********************************************************************************
+  *  Logging settings
+  *  Possible LOGLEVEL and LOGUSERLEVEL values are:
+@@ -81,9 +82,23 @@
+     define('LOGERRORFILE', LOGFILEDIR . 'autodiscover-error.log');
+     define('LOGLEVEL', LOGLEVEL_INFO);
+     define('LOGUSERLEVEL', LOGLEVEL);
++
++
+ /**********************************************************************************
+  *  Backend settings
++ *
++ *  Z-Push supports currently the data backend providers Zarafa, IMAP, vCard directory,
++ *  Maildir and a mixture by the combined one. Ensure that the used backend is installed
++ *  and proper configured as well:
++ *    BackendZarafa   - configure /etc/z-push/zarafa.php (provided by z-push-zarafa)
++ *    BackendCombined - configure /etc/z-push/combined.php (provided by z-push-combined)
++ *                      and of course the wanted (at least two) other backend providers
++ *    BackendIMAP     - configure /etc/z-push/imap.php (provided by z-push-imap)
++ *    BackendVCardDir - configure /etc/z-push/vcarddir.php (provided by z-push-vcarddir)
++ *    BackendMaildir  - configure /etc/z-push/maildir.php (provided by z-push-maildir)
++ *  If only one data backend provider has been installed, that one is used by default.
++ *  In case of multiple installed data backend providers, they are tried in order above.
+  */
+-    // the backend data provider
++    // The backend data provider
+     define('BACKEND_PROVIDER', '');
+ ?>
+\ No newline at end of file

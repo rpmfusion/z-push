@@ -108,11 +108,11 @@ For some releases it is necessary to e.g. resynchronize the mobile.
 S/MIME
 ------
 
-Z-Push supports signing and en-/decrypting of emails on mobile devices since
+Z-Push supports signing and en-/decrypting of e-mails on mobile devices since
 the version 2.0.7.
 
 *Important* Currently only Android 4.X and higher and Apple iOS 5 and higher
-devices are known to support encryption/signing of emails.
+devices are known to support encryption/signing of e-mails.
 
 It might be possible that PHP functions require CA information in order to
 validate certs. Therefore the CAINFO parameter in the config.php must be
