@@ -1,6 +1,6 @@
 Summary:        ActiveSync over-the-air implementation for mobile syncing
 Name:           z-push
-Version:        2.2.7
+Version:        2.2.8
 Release:        1%{?dist}
 License:        AGPLv3 with exceptions
 Group:          Applications/Productivity
@@ -103,7 +103,7 @@ you will need to install this package.
 %package zarafa
 Summary:        Zarafa data backend provider for Z-Push
 Group:          Applications/Productivity
-Requires:       %{name} = %{version}-%{release}, php-mapi >= 7.1.11
+Requires:       %{name} = %{version}-%{release}, php-mapi >= 7.0.6
 Provides:       zarafa-%{name} = %{version}-%{release}
 Obsoletes:      zarafa-%{name} < %{version}-%{release}
 
@@ -225,6 +225,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/backend/zarafa/
 
 %changelog
+* Tue Feb 02 2016 Robert Scheck <robert@fedoraproject.org> 2.2.8-1
+- Upgrade to 2.2.8
+
 * Sat Dec 05 2015 Robert Scheck <robert@fedoraproject.org> 2.2.7-1
 - Upgrade to 2.2.7
 
