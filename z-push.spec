@@ -1,7 +1,7 @@
 Summary:        ActiveSync over-the-air implementation for mobile syncing
 Name:           z-push
 Version:        2.2.8
-Release:        2%{?dist}
+Release:        1%{?dist}
 License:        AGPLv3 with exceptions
 Group:          Applications/Productivity
 URL:            https://z-push.org/
@@ -100,7 +100,6 @@ The z-push-vcarddir package contains the vCard directory backend data
 provider for Z-Push. If you want Z-Push to access a vCard directory,
 you will need to install this package.
 
-%if 0%{?rhel}
 %package zarafa
 Summary:        Zarafa data backend provider for Z-Push
 Group:          Applications/Productivity
@@ -113,7 +112,6 @@ The z-push-zarafa package contains the Zarafa Collaboration Plattform
 data backend provider for Z-Push. If you want Z-Push to access a MAPI-
 based service or the Zarafa Collaboration Plattform, you will need to
 install this package.
-%endif
 
 %prep
 %setup -q -n %{name}-%{version}
@@ -134,16 +132,10 @@ cp -af * $RPM_BUILD_ROOT%{_datadir}/%{name}/
 mv -f $RPM_BUILD_ROOT%{_datadir}/%{name}/config.php $RPM_BUILD_ROOT%{_sysconfdir}/%{name}/config.php
 ln -sf ../../..%{_sysconfdir}/%{name}/config.php $RPM_BUILD_ROOT%{_datadir}/%{name}/config.php
 
-%if 0%{?rhel} 
-variants="zarafa"
-%endif
-
-for backend in combined imap maildir searchldap vcarddir $variants; do
+for backend in combined imap maildir searchldap vcarddir zarafa; do
   mv -f $RPM_BUILD_ROOT%{_datadir}/%{name}/backend/${backend}/config.php $RPM_BUILD_ROOT%{_sysconfdir}/%{name}/${backend}.php
   ln -sf ../../../../..%{_sysconfdir}/%{name}/${backend}.php $RPM_BUILD_ROOT%{_datadir}/%{name}/backend/${backend}/config.php
 done
-
-
 
 mv -f $RPM_BUILD_ROOT%{_datadir}/%{name}/autodiscover/config.php $RPM_BUILD_ROOT%{_sysconfdir}/%{name}/autodiscover.php
 ln -sf ../../../..%{_sysconfdir}/%{name}/${backend}.php $RPM_BUILD_ROOT%{_datadir}/%{name}/autodiscover/config.php
@@ -227,17 +219,12 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/%{name}/vcarddir.php
 %{_datadir}/%{name}/backend/vcarddir/
 
-%if 0%{?rhel}
 %files zarafa
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/%{name}/zarafa.php
 %{_datadir}/%{name}/backend/zarafa/
-%endif
 
 %changelog
-* Sat Aug 20 2016 Sérgio Basto <sergio@serjux.com> - 2.2.8-2
-- Only need z-push-zarafa for Zarafa, which is no longer in Fedora, rfbz #3892
-
 * Tue Feb 02 2016 Robert Scheck <robert@fedoraproject.org> 2.2.8-1
 - Upgrade to 2.2.8
 
@@ -316,7 +303,7 @@ rm -rf $RPM_BUILD_ROOT
 * Fri Feb 11 2011 Robert Scheck <robert@fedoraproject.org> 1.5.1-1
 - Upgrade to 1.5.1
 
-* Tue Jan 25 2011 Robert Scheck <robert@fedoraproject.org> 1.5-1
+* Mon Jan 26 2011 Robert Scheck <robert@fedoraproject.org> 1.5-1
 - Upgrade to 1.5
 
 * Thu May 27 2010 Robert Scheck <robert@fedoraproject.org> 1.3-2
