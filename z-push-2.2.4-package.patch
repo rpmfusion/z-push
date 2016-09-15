@@ -92,12 +92,12 @@ configuration hints regarding multiple data backend providers.
  include('lib/exceptions/exceptions.php');
  include('lib/core/zpushdefs.php');
  include('lib/core/zpush.php');
-@@ -61,7 +65,6 @@
+@@ -61,7 +65,6 @@ include('version.php');
   * MAIN
   */
      declare(ticks = 1);
 -    define('BASE_PATH_CLI',  dirname(__FILE__) ."/");
- 
+     set_include_path(get_include_path() . PATH_SEPARATOR . BASE_PATH_CLI);
      try {
          ZPush::CheckConfig();
 --- z-push-2.2.4/tools/migrate-2.0.x-2.1.0.php			2015-09-30 19:10:45.000000000 +0200

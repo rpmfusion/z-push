@@ -1,7 +1,7 @@
 Summary:        ActiveSync over-the-air implementation for mobile syncing
 Name:           z-push
-Version:        2.2.9
-Release:        2%{?dist}
+Version:        2.2.12
+Release:        1%{?dist}
 License:        AGPLv3 with exceptions
 Group:          Applications/Productivity
 URL:            https://z-push.org/
@@ -235,6 +235,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Thu Sep 15 2016 Sérgio Basto <sergio@serjux.com> - 2.2.12-1
+- Update to 2.2.12
+
 * Thu Sep 15 2016 Sérgio Basto <sergio@serjux.com> - 2.2.9-2
 - Only need z-push-zarafa for Zarafa, which is no longer in Fedora, rfbz #3892
 
