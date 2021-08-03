@@ -1,7 +1,7 @@
 Summary:        ActiveSync over-the-air implementation for mobile syncing
 Name:           z-push
 Version:        2.2.12
-Release:        11%{?dist}
+Release:        12%{?dist}
 License:        AGPLv3 with exceptions
 Group:          Applications/Productivity
 URL:            https://z-push.org/
@@ -235,6 +235,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Tue Aug 03 2021 RPM Fusion Release Engineering <leigh123linux@gmail.com> - 2.2.12-12
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
+
 * Thu Feb 04 2021 RPM Fusion Release Engineering <leigh123linux@gmail.com> - 2.2.12-11
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_34_Mass_Rebuild
 
